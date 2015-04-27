@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Mounika Lakkadi" />
+
+
+<title>PML Coursera writeup</title>
+
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type="text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">PML Coursera writeup</h1>
+<h4 class="author"><em>Mounika Lakkadi</em></h4>
+<h4 class="date"><em>Sunday, April 26, 2015</em></h4>
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#installing-the-attaching-the-required-packages">Installing the attaching the required packages</a></li>
+<li><a href="#reading-the-training-and-test-data">Reading the training and test data</a></li>
+<li><a href="#partioning-the-training-set-into-two-training-60-and-test-with-40">Partioning the training set into two training 60% and test with 40%</a></li>
+<li><a href="#cleaning-the-data">Cleaning the data</a></li>
+<li><a href="#creating-another-subset-with-nonzero-variables">creating another subset with Nonzero Variables</a></li>
+<li><a href="#to-check-the-total-number-of-new-observations">To check the total number of new observations</a></li>
+<li><a href="#transformation-2-killing-first-column-of-dataset---id-removing-first-id-variable-so-that-it-does-not-interfer-with-ml-algorithms">Transformation 2: Killing first column of Dataset - ID Removing first ID variable so that it does not interfer with ML Algorithms:</a></li>
+<li><a href="#transformation-3-cleaning-variables-with-too-many-nas.-for-variables-that-have-more-than-a-60-threshold-of-nas-im-going-to-leave-them-out">Transformation 3: Cleaning Variables with too many NAs. For Variables that have more than a 60% threshold of NA’s I’m going to leave them out:</a></li>
+<li><a href="#creating-another-subset-to-iterate-in-loop">creating another subset to iterate in loop</a></li>
+<li><a href="#to-check-the-new-n-of-observations">To check the new N?? of observations</a></li>
+<li><a href="#seting-back-to-our-set">Seting back to our set:</a></li>
+<li><a href="#repeat-exact-same-3-transformations-for-our-testingpartition-and-testing-data-sets.">repeat exact same 3 transformations for our Testingpartition and testing data sets.</a></li>
+<li><a href="#checking-the-no-of-new-observations">checking the no of new observations</a></li>
+<li><a href="#testing---testing-lengthtesting">testing &lt;- testing[-length(testing)]</a></li>
+<li><a href="#coerce-the-data-into-the-same-type.">coerce the data into the same type.</a></li>
+<li><a href="#testing-the-coercion">Testing the coercion :</a></li>
+<li><a href="#prediction-using-machine-learning-algorithms--decision-tree">Prediction using Machine Learning algorithms- Decision Tree</a></li>
+<li><a href="#predicting">Predicting:</a></li>
+<li><a href="#moment-of-truth-using-confusion-matrix-to-test-results">(Moment of truth) Using confusion Matrix to test results:</a></li>
+<li><a href="#ml-algorithms-for-prediction-random-forests">ML algorithms for prediction: Random Forests</a></li>
+<li><a href="#predicting-in-sample-error">Predicting in-sample error:</a></li>
+<li><a href="#moment-of-truth-using-confusion-matrix-to-test-results-1">(Moment of truth) Using confusion Matrix to test results:</a></li>
+</ul>
+</div>
+
+<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com">http://rmarkdown.rstudio.com</a>.</p>
+<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<div id="installing-the-attaching-the-required-packages" class="section level1">
+<h1>Installing the attaching the required packages</h1>
+<p>library(caret) library(rpart) library(rpart.plot) library(RColorBrewer) library(rattle) library(randomForest)</p>
+<p>set.seed(12345)</p>
+<p>trainUrl &lt;- “<a href="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>” testUrl &lt;- “<a href="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a>”</p>
+</div>
+<div id="reading-the-training-and-test-data" class="section level1">
+<h1>Reading the training and test data</h1>
+<p>training &lt;- read.csv(url(trainUrl), na.strings=c(“NA”,“#DIV/0!”,“”))</p>
+<p>testing &lt;- read.csv(url(testUrl), na.strings=c(“NA”,“#DIV/0!”,“”))</p>
+</div>
+<div id="partioning-the-training-set-into-two-training-60-and-test-with-40" class="section level1">
+<h1>Partioning the training set into two training 60% and test with 40%</h1>
+<p>inTrain &lt;- createDataPartition(y=training$classe, p=0.6, list=FALSE)</p>
+<p>Trainingpartition &lt;- training[inTrain, ]</p>
+<p>Testingpartition &lt;- training[-inTrain, ]</p>
+<p>dim(Trainingpartition)</p>
+<p>dim(Trainingpartition)</p>
+</div>
+<div id="cleaning-the-data" class="section level1">
+<h1>Cleaning the data</h1>
+<p>NonZerovalueData &lt;- nearZeroVar(Trainingpartition, saveMetrics=TRUE)</p>
+<p>NonZerovalueData</p>
+<p>myTraining &lt;- myTraining[!myNZVvars]</p>
+</div>
+<div id="creating-another-subset-with-nonzero-variables" class="section level1">
+<h1>creating another subset with Nonzero Variables</h1>
+<p>NZVvariables &lt;- names(Trainingpartition) %in% c(“new_window”, “kurtosis_roll_belt”, “kurtosis_picth_belt”, “kurtosis_yaw_belt”, “skewness_roll_belt”, “skewness_roll_belt.1”, “skewness_yaw_belt”, “max_yaw_belt”, “min_yaw_belt”, “amplitude_yaw_belt”, “avg_roll_arm”, “stddev_roll_arm”, “var_roll_arm”, “avg_pitch_arm”, “stddev_pitch_arm”, “var_pitch_arm”, “avg_yaw_arm”, “stddev_yaw_arm”, “var_yaw_arm”, “kurtosis_roll_arm”, “kurtosis_picth_arm”, “kurtosis_yaw_arm”, “skewness_roll_arm”, “skewness_pitch_arm”, “skewness_yaw_arm”, “max_roll_arm”, “min_roll_arm”, “min_pitch_arm”, “amplitude_roll_arm”, “amplitude_pitch_arm”, “kurtosis_roll_dumbbell”, “kurtosis_picth_dumbbell”, “kurtosis_yaw_dumbbell”, “skewness_roll_dumbbell”, “skewness_pitch_dumbbell”, “skewness_yaw_dumbbell”, “max_yaw_dumbbell”, “min_yaw_dumbbell”, “amplitude_yaw_dumbbell”, “kurtosis_roll_forearm”, “kurtosis_picth_forearm”, “kurtosis_yaw_forearm”, “skewness_roll_forearm”, “skewness_pitch_forearm”, “skewness_yaw_forearm”, “max_roll_forearm”, “max_yaw_forearm”, “min_roll_forearm”, “min_yaw_forearm”, “amplitude_roll_forearm”, “amplitude_yaw_forearm”, “avg_roll_forearm”, “stddev_roll_forearm”, “var_roll_forearm”, “avg_pitch_forearm”, “stddev_pitch_forearm”, “var_pitch_forearm”, “avg_yaw_forearm”, “stddev_yaw_forearm”, “var_yaw_forearm”)</p>
+<p>NZVvariables</p>
+<p>Trainingpartition &lt;- Trainingpartition[!NZVvariables]</p>
+</div>
+<div id="to-check-the-total-number-of-new-observations" class="section level1">
+<h1>To check the total number of new observations</h1>
+<p>dim(Trainingpartition)</p>
+</div>
+<div id="transformation-2-killing-first-column-of-dataset---id-removing-first-id-variable-so-that-it-does-not-interfer-with-ml-algorithms" class="section level1">
+<h1>Transformation 2: Killing first column of Dataset - ID Removing first ID variable so that it does not interfer with ML Algorithms:</h1>
+<p>Trainingpartition &lt;- Trainingpartition[c(-1)]</p>
+</div>
+<div id="transformation-3-cleaning-variables-with-too-many-nas.-for-variables-that-have-more-than-a-60-threshold-of-nas-im-going-to-leave-them-out" class="section level1">
+<h1>Transformation 3: Cleaning Variables with too many NAs. For Variables that have more than a 60% threshold of NA’s I’m going to leave them out:</h1>
+<p>trainingV3 &lt;- Trainingpartition</p>
+</div>
+<div id="creating-another-subset-to-iterate-in-loop" class="section level1">
+<h1>creating another subset to iterate in loop</h1>
+<p>for(i in 1:length(Trainingpartition)) { #for every column in the training dataset if( sum( is.na(Trainingpartition[, i] ) ) /nrow(Trainingpartition) &gt;= .6 ) { #if n?? NAs &gt; 60% of total observations for(j in 1:length(trainingV3)) { if( length( grep(names(Trainingpartition[i]), names(trainingV3)[j]) ) ==1) { #if the columns are the same: trainingV3 &lt;- trainingV3[ , -j] #Remove that column }<br /> } } }</p>
+</div>
+<div id="to-check-the-new-n-of-observations" class="section level1">
+<h1>To check the new N?? of observations</h1>
+<p>dim(trainingV3)</p>
+</div>
+<div id="seting-back-to-our-set" class="section level1">
+<h1>Seting back to our set:</h1>
+<p>Trainingpartition &lt;- trainingV3</p>
+<p>rm(trainingV3)</p>
+</div>
+<div id="repeat-exact-same-3-transformations-for-our-testingpartition-and-testing-data-sets." class="section level1">
+<h1>repeat exact same 3 transformations for our Testingpartition and testing data sets.</h1>
+<p>clean1 &lt;- colnames(Trainingpartition) clean2 &lt;- colnames(Trainingpartition[, -58]) #already with classe column removed</p>
+<p>Testingpartition &lt;- Testingpartition[clean1]</p>
+<p>testing &lt;- testing[clean2]</p>
+</div>
+<div id="checking-the-no-of-new-observations" class="section level1">
+<h1>checking the no of new observations</h1>
+<p>dim(Testingpartition)</p>
+<p>dim(testing)</p>
+</div>
+<div id="testing---testing-lengthtesting" class="section level1">
+<h1>testing &lt;- testing[-length(testing)]</h1>
+</div>
+<div id="coerce-the-data-into-the-same-type." class="section level1">
+<h1>coerce the data into the same type.</h1>
+<p>for (i in 1:length(testing) ) { for(j in 1:length(Trainingpartition)) { if( length( grep(names(Trainingpartition[i]), names(testing)[j]) ) ==1) { class(testing[j]) &lt;- class(Trainingpartition[i]) }<br /> }<br />}</p>
+</div>
+<div id="testing-the-coercion" class="section level1">
+<h1>Testing the coercion :</h1>
+<p>testing &lt;- rbind(training[2, -58] , testing)</p>
+<p>testing &lt;- testing[-1,]</p>
+</div>
+<div id="prediction-using-machine-learning-algorithms--decision-tree" class="section level1">
+<h1>Prediction using Machine Learning algorithms- Decision Tree</h1>
+<p>modFitA1 &lt;- rpart(classe ~ ., data=Trainingpartition, method=“class”)</p>
+<p>modFitA1</p>
+<p>fancyRpartPlot(modFitA1)</p>
+</div>
+<div id="predicting" class="section level1">
+<h1>Predicting:</h1>
+<p>predictionsA1 &lt;- predict(modFitA1, Testingpartition, type = “class”)</p>
+</div>
+<div id="moment-of-truth-using-confusion-matrix-to-test-results" class="section level1">
+<h1>(Moment of truth) Using confusion Matrix to test results:</h1>
+<p>library(e1071)</p>
+<p>confusionMatrix(predictionsA1, Testingpartition$classe)</p>
+</div>
+<div id="ml-algorithms-for-prediction-random-forests" class="section level1">
+<h1>ML algorithms for prediction: Random Forests</h1>
+<p>modFitB1 &lt;- randomForest(classe ~. , data=Trainingpartition)</p>
+</div>
+<div id="predicting-in-sample-error" class="section level1">
+<h1>Predicting in-sample error:</h1>
+<p>predictionsB1 &lt;- predict(modFitB1, Testingpartition, type = “class”)</p>
+</div>
+<div id="moment-of-truth-using-confusion-matrix-to-test-results-1" class="section level1">
+<h1>(Moment of truth) Using confusion Matrix to test results:</h1>
+<p>confusionMatrix(predictionsB1, Testingpartition$classe)</p>
+<p>require(devtools)</p>
+<p>install.packages(“devtools”)</p>
+<p>git config</p>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
