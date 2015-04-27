@@ -294,4 +294,4 @@ Neg Pred Value         1.0000   0.9998   0.9994   0.9994   0.9994
 Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
 Detection Rate         0.2845   0.1933   0.1738   0.1634   0.1833
 Detection Prevalence   0.2846   0.1936   0.1742   0.1642   0.1834
-Balanced Accuracy      0.9999   0.9995   0.9983   0.9980   0.99
+Balanced Accuracy      0.9999   0.9995   0.9983   0.9980   0.999
